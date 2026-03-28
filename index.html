@@ -2,58 +2,56 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>BATTLESHIPS: FINAL WARFARE</title>
+    <title>BATTLESHIPS: PERFECT EDITION</title>
     <style>
         :root {
-            --bg-color: #0a0e17;
-            --grid-color: #1a2238;
-            --border-color: #3e4c6f;
-            --hit-color: #e94560;
-            --miss-color: #f9f9f9;
-            --valid-hint: rgba(100, 255, 100, 0.4);
-            --invalid-hint: rgba(255, 100, 100, 0.4);
+            --bg-color: #0d1117;
+            --container-bg: #161b22;
+            --grid-line: #30363d;
+            --cell-bg: #21262d;
+            --hit-color: rgba(233, 69, 96, 0.6);
+            --miss-color: rgba(255, 255, 255, 0.1);
+            --valid-hint: rgba(100, 255, 100, 0.3);
+            --invalid-hint: rgba(255, 100, 100, 0.3);
         }
 
-        body { font-family: 'malgun gothic', sans-serif; background-color: var(--bg-color); color: #fff; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; min-height: 100vh; overflow: hidden; }
-        .game-container { background: var(--grid-color); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.7); position: relative; z-index: 10;}
+        body { font-family: 'malgun gothic', sans-serif; background-color: var(--bg-color); color: #c9d1d9; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; overflow-x: hidden; }
+        .game-container { background: var(--container-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--grid-line); text-align: center; width: 95%; max-width: 900px; position: relative; z-index: 10; }
         
-        h1 { margin: 0 0 10px 0; font-size: 1.8rem; letter-spacing: 2px; text-transform: uppercase;}
-        .status-panel { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 1.1rem; border: 1px solid var(--border-color);}
+        h2 { margin: 0 0 15px 0; font-size: 1.5rem; color: #fff; letter-spacing: 1px; }
+        .status-panel { background: #0d1117; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; font-size: 1rem; border: 1px solid var(--grid-line); display: flex; justify-content: space-between; align-items: center; }
         
-        .game-boards { display: flex; justify-content: center; gap: 40px; margin-top: 10px;}
+        .game-boards { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
         .board-wrapper { display: flex; flex-direction: column; align-items: center; }
-        .board-title { font-weight: bold; margin-bottom: 15px; color: #aaa; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;}
+        .board-title { font-weight: bold; margin-bottom: 10px; color: #8b949e; font-size: 0.9rem; letter-spacing: 1px; }
 
-        .grid { display: grid; grid-template-columns: repeat(10, 32px); grid-template-rows: repeat(10, 32px); background-color: #111; border: 2px solid var(--border-color); gap: 1px;}
-        .cell { width: 32px; height: 32px; background-color: var(--grid-color); box-sizing: border-box; position: relative; cursor: pointer; background-repeat: no-repeat; background-size: auto;}
+        /* 그리드 크기 고정 (30px) */
+        .grid { display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); background-color: var(--grid-line); border: 2px solid var(--grid-line); gap: 1px; }
+        .cell { width: 30px; height: 30px; background-color: var(--cell-bg); box-sizing: border-box; position: relative; cursor: pointer; background-repeat: no-repeat; display: flex; justify-content: center; align-items: center; }
         
-        #player-grid .cell.hint-valid { background-color: var(--valid-hint) !important; }
-        #player-grid .cell.hint-invalid { background-color: var(--invalid-hint) !important; cursor: not-allowed;}
+        /* 배치 힌트 색상 */
+        .cell.hint-valid { background-color: var(--valid-hint) !important; }
+        .cell.hint-invalid { background-color: var(--invalid-hint) !important; cursor: not-allowed; }
 
-        .cell.hit { animation: hitExplosion 0.5s ease-out forwards; background-image: none !important; }
-        .cell.hit::after { content: '×'; position: absolute; color: #fff; font-size: 1.5rem; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
-        .cell.miss { background-color: rgba(255,255,255,0.1) !important; background-image: none !important;}
-        .cell.miss::after { content: '·'; position: absolute; color: #aaa; font-size: 1rem; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        /* 명중/빗나감 표시 (배 이미지를 가리지 않도록 가상 요소 사용) */
+        .cell.hit::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--hit-color); z-index: 1; pointer-events: none; }
+        .cell.hit span { position: relative; z-index: 2; color: #fff; font-size: 1.5rem; font-weight: bold; pointer-events: none; }
+        
+        .cell.miss::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--miss-color); z-index: 1; pointer-events: none; }
+        .cell.miss span { position: relative; z-index: 2; color: #888; font-size: 1.5rem; font-weight: bold; pointer-events: none; }
 
-        @keyframes hitExplosion { 0% { scale: 0.5; opacity: 0; } 50% { scale: 1.2; opacity: 1; background: #ffcc00; } 100% { scale: 1; opacity: 1; background: var(--hit-color); } }
-        @keyframes shipSunk { 0% { filter: brightness(1) sepia(0); } 100% { filter: brightness(0.5) sepia(1) saturate(5) hue-rotate(-50deg); } }
-        .cell.ship-sunk { animation: shipSunk 1s infinite alternate; border: 1px solid #ff0000; }
+        /* 애니메이션 캔버스 (화면 전체 덮기) */
+        #missile-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
 
-        /* 미사일 캔버스를 화면 전체(fixed)로 고정하여 좌표 오류 완벽 차단 */
-        #missile-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; width: 100vw; height: 100vh;}
+        .setup-area { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--grid-line); }
+        .ship-palette { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .palette-ship { background: #21262d; border: 1px solid #30363d; padding: 8px; border-radius: 5px; cursor: pointer; display: flex; flex-direction: column; align-items: center; width: 100px; font-size: 0.75rem; color: #c9d1d9; }
+        .palette-ship.selected { border: 2px solid #58a6ff; background: #161b22; }
+        .palette-ship.placed { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+        .ship-preview { width: auto; max-width: 100%; height: 20px; margin-bottom: 5px; display: block; }
 
-        .setup-area { margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color); width: 100%; box-sizing: border-box;}
-        .ship-palette { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px;}
-        .palette-ship { 
-            background: rgba(255,255,255,0.05); border: 1px solid #444; padding: 10px; border-radius: 5px; cursor: pointer; transition: 0.2s;
-            display: flex; flex-direction: column; align-items: center; width: 130px; font-size: 0.8rem;
-        }
-        .palette-ship.selected { border: 2px solid #58a6ff; background: rgba(88, 166, 255, 0.1); }
-        .palette-ship.placed { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
-        .ship-preview { width: 100%; height: 32px; background-position: center; background-repeat: no-repeat; background-size: contain; margin-bottom: 5px;}
-
-        button.main-btn { margin-top: 20px; padding: 12px 40px; font-size: 1.1rem; cursor: pointer; background: #238636; color: white; border: none; border-radius: 5px; font-weight: bold;}
-        button.main-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .main-btn { padding: 10px 30px; font-size: 1rem; cursor: pointer; background: #238636; color: white; border: none; border-radius: 5px; font-weight: bold; }
+        .main-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
         .setup-phase .battle-only { display: none !important; }
         .battle-phase .setup-only { display: none !important; }
@@ -64,14 +62,11 @@
 <canvas id="missile-canvas"></canvas>
 
 <div class="game-container">
-    <h1>BATTLESHIPS</h1>
+    <h2>BATTLESHIPS</h2>
     
     <div class="status-panel">
-        <div id="status-msg" class="setup-only">함대를 배치하십시오. (A키/S키로 회전)</div>
-        <div class="battle-only" style="display:flex; justify-content:space-around; width:100%;">
-            <div>전황: <span id="combat-log" style="color:#ffcc00">전투 대기 중...</span></div>
-            <div>격침시킨 적함: <span id="enemy-ships-sunk" style="color:#e94560">0</span>/5</div>
-        </div>
+        <div id="status-msg" style="color:#ffcc00">함대를 배치하십시오. (키보드 A/S키로 회전)</div>
+        <div class="battle-only">격침시킨 적함: <span id="enemy-ships-sunk" style="color:#e94560">0</span> / 5</div>
     </div>
 
     <div class="game-boards">
@@ -92,91 +87,164 @@
 </div>
 
 <script>
-    const shipImgs = {
-        carrier_h: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAAgCAYAAACvcv6RAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA0SURBV4hWNf/PwDAsADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAH54DAAM9T7C8/1HnwAAAABJRU5ErkJggg==',
-        carrier_v: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAACgCAYAAAB94f9bAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWOv/PwDAMADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAP64YwADRjGq48W3mAAAAABJRU5ErkJggg==',
-        battleship_h: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAgCAYAAAD9In78AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA0SURBV4hWNf/PwDAsADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAPt+XgAD1L014mBv+wAAAABJRU5ErkJggg==',
-        battleship_v: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAACACAYAAAB7o99IAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWOv/PwDAMADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAPr8TwADB3zQ4p5b8wAAAABJRU5ErkJggg==',
-        frigate_h: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAYAAAD9In78AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWNf/PwDAsADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAPy+VQAD7f9f4S7/wQAAAABJRU5ErkJggg==',
-        frigate_v: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABgCAYAAAB94f9bAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWOv/PwDAMADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAPy9RAADp39Y8V3+AgAAAABJRU5ErkJggg==',
-        submarine_h: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAgCAYAAAD9In78AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWNf/PwDAsADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAPz+NQADE/f95S798QAAAABJRU5ErkJggg==',
-        submarine_v: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABgCAYAAAB94f9bAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWOv/PwDAMADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAP78RgADEfHw6pv+AAMAAA=',
-        minesweeper_h: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACmclpXAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWNf/PwDAsADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAP79SAADz8556L/+wAAAAABJRU5ErkJggg==',
-        minesweeper_v: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7o99IAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAA1SURBV4hWOv/PwDAMADMAigZRAEUAKwCKBlEAREB89P/wIBAA8dH/Aw9GAP5+PAADh49x+F7vAAA='
-    };
-
+    // --- 1. 브라우저에서 직접 고화질 함선 이미지 생성 (링크 불필요, 100% 작동) ---
+    const shipImgs = {};
     const shipsData = [
         { id: 'carrier', name: '항공모함', size: 5 },
         { id: 'battleship', name: '전함', size: 4 },
         { id: 'frigate', name: '구축함', size: 3 },
-        { id: 'submarine', name: '잠수함', size: 3 }, 
+        { id: 'submarine', name: '잠수함', size: 3, isYellow: true }, // 노란색 잠수함
         { id: 'minesweeper', name: '순찰함', size: 2 }
     ];
 
+    function generateShipImages() {
+        shipsData.forEach(ship => {
+            const hCanvas = document.createElement('canvas'); hCanvas.width = 30 * ship.size; hCanvas.height = 30;
+            const vCanvas = document.createElement('canvas'); vCanvas.width = 30; vCanvas.height = 30 * ship.size;
+            
+            [ { ctx: hCanvas.getContext('2d'), isVert: false }, { ctx: vCanvas.getContext('2d'), isVert: true } ].forEach(({ctx, isVert}) => {
+                const s = 30; const w = isVert ? s : s * ship.size; const h = isVert ? s * ship.size : s;
+                
+                // 그림자
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                if (!isVert) ctx.fillRect(4, 8, w - 8, s - 10); else ctx.fillRect(8, 4, s - 10, h - 8);
+
+                // 배 몸통 (잠수함은 노란색)
+                ctx.fillStyle = ship.isYellow ? '#facc15' : '#64748b';
+                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                if (!isVert) { ctx.moveTo(2, 6); ctx.lineTo(w - 12, 6); ctx.lineTo(w - 2, s / 2); ctx.lineTo(w - 12, s - 6); ctx.lineTo(2, s - 6); } 
+                else { ctx.moveTo(6, 2); ctx.lineTo(s - 6, 2); ctx.lineTo(s - 6, h - 12); ctx.lineTo(s / 2, h - 2); ctx.lineTo(6, h - 12); }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                // 디테일 (함교 및 활주로)
+                ctx.fillStyle = '#1e293b';
+                if (!isVert) {
+                    ctx.fillRect(w / 2 - 8, 10, 16, 10);
+                    if (ship.id === 'carrier') { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillRect(10, s / 2 - 1, w - 30, 2); }
+                } else {
+                    ctx.fillRect(10, h / 2 - 8, 10, 16);
+                    if (ship.id === 'carrier') { ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillRect(s / 2 - 1, 10, 2, h - 30); }
+                }
+            });
+            shipImgs[ship.id + '_h'] = hCanvas.toDataURL(); shipImgs[ship.id + '_v'] = vCanvas.toDataURL();
+        });
+    }
+
+    // --- 2. 게임 기본 로직 및 상태 관리 ---
     let gamePhase = 'setup', playerTurn = true, selectedIdx = -1, isVert = false;
     let playerData = Array(100).fill(0), enemyData = Array(100).fill(0);
     let playerShips = [], enemyShips = [];
 
+    // 캔버스 크기 맞춤 (블로그스팟 iframe 호환)
     const mCanvas = document.getElementById('missile-canvas');
     const mCtx = mCanvas.getContext('2d');
-    function resize() { mCanvas.width = window.innerWidth; mCanvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+    function resizeCanvas() {
+        mCanvas.width = window.innerWidth || document.documentElement.clientWidth;
+        mCanvas.height = window.innerHeight || document.documentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
 
     function init() {
+        generateShipImages();
+        resizeCanvas();
+        
+        // 그리드 껍데기 생성
         const pGrid = document.getElementById('player-grid');
         const eGrid = document.getElementById('enemy-grid');
         for (let i = 0; i < 100; i++) {
-            const pc = document.createElement('div'); pc.className = 'cell'; pc.id = `p-${i}`;
+            const pc = document.createElement('div'); pc.id = `p-${i}`; pc.className = 'cell';
             pc.onmouseover = () => handleHover(i); pc.onmouseout = clearHints; pc.onclick = () => handlePlace(i);
             pGrid.appendChild(pc);
 
-            const ec = document.createElement('div'); ec.className = 'cell'; ec.id = `e-${i}`;
+            const ec = document.createElement('div'); ec.id = `e-${i}`; ec.className = 'cell';
             ec.onclick = (e) => handleAttack(i, e);
             eGrid.appendChild(ec);
         }
         buildPalette();
+        updateGrids(); // 초기 화면 렌더링
     }
 
     function buildPalette() {
         const p = document.getElementById('ship-palette'); p.innerHTML = '';
         shipsData.forEach((s, i) => {
             const b = document.createElement('div'); b.className = 'palette-ship'; b.id = `pal-${i}`;
-            b.innerHTML = `<div class="ship-preview" style="background-image:url(${shipImgs[s.id + '_h']})"></div><span>${s.name} (${s.size}칸)</span>`;
-            b.onclick = () => { selectedIdx = i; document.querySelectorAll('.palette-ship').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); };
+            b.innerHTML = `<img src="${shipImgs[s.id + '_h']}" class="ship-preview" /><span>${s.name}</span>`;
+            b.onclick = () => { 
+                if (gamePhase !== 'setup' || playerShips[i]) return;
+                selectedIdx = i; 
+                document.querySelectorAll('.palette-ship').forEach(x => x.classList.remove('selected')); 
+                b.classList.add('selected'); 
+            };
             p.appendChild(b);
         });
     }
 
+    // --- 3. 그리드 시각화 엔진 (핵심 해결책) ---
+    function updateGrids() {
+        for (let i = 0; i < 100; i++) {
+            // 플레이어 그리드 렌더링
+            const pCell = document.getElementById(`p-${i}`);
+            pCell.className = 'cell'; pCell.innerHTML = ''; pCell.style.backgroundImage = '';
+            
+            // 내 배 표시 (길이 버그 해결: backgroundSize 정확히 적용)
+            const pSh = playerShips.find(s => s && s.pos.includes(i));
+            if (pSh) {
+                const pIdx = pSh.pos.indexOf(i);
+                pCell.style.backgroundImage = `url(${pSh.v ? shipImgs[pSh.id + '_v'] : shipImgs[pSh.id + '_h']})`;
+                pCell.style.backgroundPosition = pSh.v ? `0 -${pIdx * 30}px` : `-${pIdx * 30}px 0`;
+                pCell.style.backgroundSize = pSh.v ? `30px ${pSh.size * 30}px` : `${pSh.size * 30}px 30px`;
+            }
+            if (playerData[i] === 2) { pCell.classList.add('hit'); pCell.innerHTML = '<span>×</span>'; } 
+            else if (playerData[i] === 3) { pCell.classList.add('miss'); pCell.innerHTML = '<span>·</span>'; }
+
+            // 적군 그리드 렌더링
+            const eCell = document.getElementById(`e-${i}`);
+            eCell.className = 'cell'; eCell.innerHTML = ''; eCell.style.backgroundImage = '';
+            
+            // 격침된 적함 표시 로직 추가
+            const eSh = enemyShips.find(s => s && s.pos.includes(i));
+            if (eSh && eSh.sunk) {
+                const pIdx = eSh.pos.indexOf(i);
+                eCell.style.backgroundImage = `url(${eSh.v ? shipImgs[eSh.id + '_v'] : shipImgs[eSh.id + '_h']})`;
+                eCell.style.backgroundPosition = eSh.v ? `0 -${pIdx * 30}px` : `-${pIdx * 30}px 0`;
+                eCell.style.backgroundSize = eSh.v ? `30px ${eSh.size * 30}px` : `${eSh.size * 30}px 30px`;
+            }
+            if (enemyData[i] === 2) { eCell.classList.add('hit'); eCell.innerHTML = '<span>×</span>'; } 
+            else if (enemyData[i] === 3) { eCell.classList.add('miss'); eCell.innerHTML = '<span>·</span>'; }
+        }
+        document.getElementById('enemy-ships-sunk').innerText = enemyShips.filter(s => s && s.sunk).length;
+    }
+
+    // --- 4. 배치 로직 ---
+    function checkFit(data, r, c, s, v) {
+        if (v) { if (r + s > 10) return false; for (let i = 0; i < s; i++) if (data[(r + i) * 10 + c]) return false; }
+        else { if (c + s > 10) return false; for (let i = 0; i < s; i++) if (data[r * 10 + (c + i)]) return false; }
+        return true;
+    }
+
     function handleHover(idx) {
-        clearHints(); if (selectedIdx === -1) return;
-        const size = shipsData[selectedIdx].size; const r = Math.floor(idx / 10); const c = idx % 10;
-        const valid = checkFit(playerData, r, c, size, isVert);
-        for (let i = 0; i < size; i++) {
+        if (selectedIdx === -1 || gamePhase !== 'setup') return;
+        const s = shipsData[selectedIdx]; const r = Math.floor(idx / 10); const c = idx % 10;
+        const valid = checkFit(playerData, r, c, s.size, isVert);
+        
+        for (let i = 0; i < s.size; i++) {
             const nr = isVert ? r + i : r; const nc = isVert ? c : c + i;
             if (nr < 10 && nc < 10) {
-                const cell = document.getElementById('player-grid').children[nr * 10 + nc];
+                const cell = document.getElementById(`p-${nr * 10 + nc}`);
                 cell.classList.add(valid ? 'hint-valid' : 'hint-invalid');
                 if (valid) {
-                    cell.style.backgroundImage = `url(${isVert ? shipImgs[shipsData[selectedIdx].id + '_v'] : shipImgs[shipsData[selectedIdx].id + '_h']})`;
-                    cell.style.backgroundPosition = isVert ? `0 -${i * 32}px` : `-${i * 32}px 0`;
-                    cell.style.opacity = '0.4';
+                    cell.style.backgroundImage = `url(${isVert ? shipImgs[s.id + '_v'] : shipImgs[s.id + '_h']})`;
+                    cell.style.backgroundPosition = isVert ? `0 -${i * 30}px` : `-${i * 30}px 0`;
+                    cell.style.backgroundSize = isVert ? `30px ${s.size * 30}px` : `${s.size * 30}px 30px`;
                 }
             }
         }
     }
 
     function clearHints() {
-        document.querySelectorAll('#player-grid .cell').forEach(c => {
-            c.classList.remove('hint-valid', 'hint-invalid');
-            if (c.style.opacity === '0.4') { c.style.backgroundImage = ''; c.style.opacity = '1'; }
-        });
-    }
-
-    function checkFit(data, r, c, s, v) {
-        if (v) { if (r + s > 10) return false; for (let i = 0; i < s; i++) if (data[(r + i) * 10 + c]) return false; }
-        else { if (c + s > 10) return false; for (let i = 0; i < s; i++) if (data[r * 10 + (c + i)]) return false; }
-        return true;
+        document.querySelectorAll('#player-grid .cell').forEach(c => c.classList.remove('hint-valid', 'hint-invalid'));
+        updateGrids(); // 힌트가 사라지면 원래 이미지를 다시 렌더링
     }
 
     function handlePlace(idx) {
@@ -187,70 +255,78 @@
         const pos = [];
         for (let i = 0; i < s.size; i++) {
             const nr = isVert ? r + i : r; const nc = isVert ? c : c + i;
-            const pidx = nr * 10 + nc; playerData[pidx] = 1; pos.push(pidx);
-            const cell = document.getElementById('player-grid').children[pidx];
-            cell.style.backgroundImage = `url(${isVert ? shipImgs[s.id + '_v'] : shipImgs[s.id + '_h']})`;
-            cell.style.backgroundPosition = isVert ? `0 -${i * 32}px` : `-${i * 32}px 0`;
-            cell.style.opacity = '1';
+            pos.push(nr * 10 + nc);
         }
-        playerShips[selectedIdx] = { ...s, pos, sunk: false, hits: 0, isVert };
+        pos.forEach(p => playerData[p] = 1);
+        playerShips[selectedIdx] = { ...s, pos, sunk: false, hits: 0, v: isVert };
         document.getElementById(`pal-${selectedIdx}`).classList.add('placed');
-        selectedIdx = -1; clearHints();
         
-        // 데이터 배열의 구멍(undefined)을 걸러내고 5척이 배치되었는지 확인
+        selectedIdx = -1; clearHints();
         if (playerShips.filter(Boolean).length === 5) document.getElementById('start-battle-btn').disabled = false;
     }
 
+    // --- 5. 전투 및 애니메이션 로직 ---
     function startBattle() { 
-        gamePhase = 'battle'; 
-        document.body.className = 'battle-phase'; 
-        document.getElementById('combat-log').innerText = "전투 개시! 적을 공격하십시오.";
-        setEnemyShips(); 
-    }
-
-    function setEnemyShips() {
+        gamePhase = 'battle'; document.body.className = 'battle-phase'; 
+        document.getElementById('status-msg').innerText = "전투 개시! 적 진영을 클릭해 포격하십시오.";
+        
+        // 적 함대 자동 배치
         shipsData.forEach((s, i) => {
             let ok = false; while (!ok) {
                 const v = Math.random() < 0.5; const r = Math.floor(Math.random() * 10); const c = Math.floor(Math.random() * 10);
                 if (checkFit(enemyData, r, c, s.size, v)) {
                     const pos = []; for (let j = 0; j < s.size; j++) { const idx = (v ? r + j : r) * 10 + (v ? c : c + j); enemyData[idx] = 1; pos.push(idx); }
-                    enemyShips[i] = { ...s, pos, sunk: false, hits: 0 }; ok = true;
+                    enemyShips[i] = { ...s, pos, sunk: false, hits: 0, v: v }; ok = true;
                 }
             }
         });
+        updateGrids();
+    }
+
+    // 미사일 애니메이션 (블로그스팟 완벽 대응)
+    function animateMissile(sx, sy, ex, ey, color, cb) {
+        let frame = 0; const frames = 25; 
+        function step() {
+            frame++; const p = frame / frames; 
+            const x = sx + (ex - sx) * p;
+            const y = sy + (ey - sy) * p - (150 * Math.sin(Math.PI * p)); // 곡선 비행
+            
+            mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height); 
+            mCtx.beginPath(); mCtx.arc(x, y, 5, 0, Math.PI * 2);
+            mCtx.fillStyle = color; mCtx.shadowBlur = 10; mCtx.shadowColor = color;
+            mCtx.fill(); mCtx.shadowBlur = 0; 
+            
+            if (frame < frames) requestAnimationFrame(step); 
+            else { mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height); cb(); }
+        } 
+        step();
     }
 
     function handleAttack(idx, e) {
         if (!playerTurn || gamePhase !== 'battle' || enemyData[idx] > 1) return;
         playerTurn = false; 
-        const rect = e.target.getBoundingClientRect(); 
-        const endX = rect.left + 16; const endY = rect.top + 16;
         
-        document.getElementById('combat-log').innerText = "포격 중...";
-        
-        // 내 미사일 발사 (노란색)
-        animateMissile(window.innerWidth * 0.1, window.innerHeight * 0.9, endX, endY, '#ffcc00', () => {
-            const cell = document.getElementById('enemy-grid').children[idx];
+        const cell = document.getElementById(`e-${idx}`);
+        const rect = cell.getBoundingClientRect();
+        const endX = rect.left + rect.width / 2; const endY = rect.top + rect.height / 2;
+        const startX = mCanvas.width / 2; const startY = mCanvas.height;
+
+        document.getElementById('status-msg').innerText = "내 함대가 포격 중입니다...";
+
+        animateMissile(startX, startY, endX, endY, '#ffcc00', () => { // 노란색 미사일 발사
             if (enemyData[idx] === 1) {
-                enemyData[idx] = 2; cell.classList.add('hit');
-                // 논리 오류 수정: 순서대로 배치하지 않아도 다운되지 않도록 안전장치 추가 (sh && ...)
-                const s = enemyShips.find(sh => sh && sh.pos.includes(idx)); 
-                if (s) {
-                    s.hits++;
-                    if (s.hits === s.size) { 
-                        s.sunk = true; 
-                        document.getElementById('combat-log').innerText = `명중! 적군의 ${s.name} 격침!`;
-                        updateScore(); 
-                        checkWin(); 
-                    } else {
-                        document.getElementById('combat-log').innerText = "명중!";
-                    }
+                enemyData[idx] = 2; // 명중
+                let sh = enemyShips.find(s => s && s.pos.includes(idx));
+                if (sh) {
+                    sh.hits++;
+                    if (sh.hits === sh.size) { sh.sunk = true; document.getElementById('status-msg').innerText = `명중! 적군의 ${sh.name} 격침!`; } 
+                    else { document.getElementById('status-msg').innerText = "적함 명중!"; }
                 }
             } else { 
-                enemyData[idx] = 3; cell.classList.add('miss'); 
-                document.getElementById('combat-log').innerText = "빗나갔습니다.";
+                enemyData[idx] = 3; document.getElementById('status-msg').innerText = "포탄이 빗나갔습니다."; // 빗나감
             }
-            if (gamePhase === 'battle') setTimeout(enemyTurn, 600); 
+            updateGrids();
+            if (!checkWin()) setTimeout(enemyTurn, 800); 
         });
     }
 
@@ -258,66 +334,51 @@
         if (gamePhase !== 'battle') return;
         let idx; do { idx = Math.floor(Math.random() * 100); } while (playerData[idx] > 1);
         
-        const cell = document.getElementById('player-grid').children[idx];
+        const cell = document.getElementById(`p-${idx}`);
         const rect = cell.getBoundingClientRect();
-        const endX = rect.left + 16; const endY = rect.top + 16;
+        const endX = rect.left + rect.width / 2; const endY = rect.top + rect.height / 2;
+        const startX = mCanvas.width / 2; const startY = 0;
 
-        document.getElementById('combat-log').innerText = "적군이 반격합니다!";
+        document.getElementById('status-msg').innerText = "적군이 반격합니다!";
 
-        // 적 미사일 발사 (붉은색)
-        animateMissile(window.innerWidth * 0.9, window.innerHeight * 0.1, endX, endY, '#e94560', () => {
+        animateMissile(startX, startY, endX, endY, '#e94560', () => { // 붉은색 미사일 날아옴
             if (playerData[idx] === 1) {
-                playerData[idx] = 2; cell.classList.add('hit'); 
-                // 빈 데이터 참조 에러 방지
-                const s = playerShips.find(sh => sh && sh.pos.includes(idx)); 
-                if (s) {
-                    s.hits++;
-                    if (s.hits === s.size) { 
-                        s.sunk = true;
-                        s.pos.forEach(p => document.getElementById('player-grid').children[p].classList.add('ship-sunk')); 
-                        document.getElementById('combat-log').innerText = `경고! 아군 ${s.name} 섬멸됨!`;
-                        checkWin(); 
-                    } else {
-                        document.getElementById('combat-log').innerText = "아군 피격!";
-                    }
+                playerData[idx] = 2; 
+                let sh = playerShips.find(s => s && s.pos.includes(idx));
+                if (sh) {
+                    sh.hits++;
+                    if (sh.hits === sh.size) { sh.sunk = true; document.getElementById('status-msg').innerText = `경고! 아군 ${sh.name} 섬멸됨!`; } 
+                    else { document.getElementById('status-msg').innerText = "아군 피격!"; }
                 }
             } else { 
-                playerData[idx] = 3; cell.classList.add('miss'); 
-                document.getElementById('combat-log').innerText = "적의 포탄이 빗나갔습니다.";
+                playerData[idx] = 3; document.getElementById('status-msg').innerText = "적의 포탄이 빗나갔습니다."; 
             }
-            playerTurn = true; 
+            updateGrids();
+            if (!checkWin()) playerTurn = true; 
         });
     }
 
-    function animateMissile(sx, sy, ex, ey, color, cb) {
-        let frame = 0; const frames = 20; 
-        function step() {
-            frame++; const p = frame / frames; 
-            const x = sx + (ex - sx) * p;
-            const y = sy + (ey - sy) * p - (200 * Math.sin(Math.PI * p));
-            mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height); 
-            mCtx.beginPath(); mCtx.strokeStyle = color; mCtx.lineWidth = 4;
-            mCtx.moveTo(sx, sy); mCtx.quadraticCurveTo((sx + ex) / 2, Math.min(sy, ey) - 300, x, y); mCtx.stroke();
-            if (frame < frames) requestAnimationFrame(step); 
-            else { mCtx.clearRect(0, 0, mCanvas.width, mCanvas.height); cb(); }
-        } 
-        step();
-    }
-
-    function updateScore() { document.getElementById('enemy-ships-sunk').innerText = enemyShips.filter(s => s && s.sunk).length; }
-    
     function checkWin() { 
         if (enemyShips.every(s => s && s.sunk)) { 
-            setTimeout(() => alert("전 승리! 모든 적함을 섬멸했습니다."), 100); 
-            gamePhase = 'over'; 
+            gamePhase = 'over'; document.getElementById('status-msg').innerText = "전 승리! 모든 적함을 섬멸했습니다.";
+            setTimeout(() => alert("전 승리! 모든 적함을 섬멸했습니다."), 100); return true; 
         } 
         if (playerShips.every(s => s && s.sunk)) { 
-            setTimeout(() => alert("전 패배... 적군에게 전함이 전멸했습니다."), 100); 
-            gamePhase = 'over'; 
+            gamePhase = 'over'; document.getElementById('status-msg').innerText = "전 패배... 적군에게 전함이 전멸했습니다.";
+            setTimeout(() => alert("전 패배... 적군에게 전함이 전멸했습니다."), 100); return true; 
         } 
+        return false;
     }
-    
-    window.onkeydown = (e) => { if (gamePhase === 'setup' && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 's')) { isVert = !isVert; const h = document.querySelector('#player-grid .cell:hover'); if (h) handleHover(parseInt(h.id.split('-')[1])); } };
+
+    window.onkeydown = (e) => { 
+        if (gamePhase === 'setup' && (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 's')) { 
+            isVert = !isVert; 
+            document.querySelectorAll('.hint-valid, .hint-invalid').forEach(c => {
+                const idx = parseInt(c.id.split('-')[1]);
+                handleHover(idx);
+            });
+        } 
+    };
 
     init();
 </script>
