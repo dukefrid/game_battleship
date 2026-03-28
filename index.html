@@ -56,9 +56,15 @@
         .ship-preview { width: 100%; height: 40px; background-position: center; background-repeat: no-repeat; background-size: contain; }
 
         .instr { font-size: 0.85rem; color: #888; line-height: 1.6; text-align: left; padding: 10px; border-left: 3px solid #ffcc00; background: rgba(255,255,255,0.03);}
-        button.main-btn { margin-top: 20px; padding: 12px 40px; font-size: 1.1rem; cursor: pointer; background: #238636; color: white; border: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
+        
+        /* 메인 버튼 스타일 */
+        button.main-btn { padding: 12px 40px; font-size: 1.1rem; cursor: pointer; background: #238636; color: white; border: none; border-radius: 5px; font-weight: bold; transition: 0.3s; }
         button.main-btn:hover:not(:disabled) { background: #2ea043; transform: translateY(-2px); }
         button.main-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* 좌측에 위치할 전투 시작 버튼의 컨테이너 */
+        .start-btn-wrapper { display: flex; align-items: center; padding-top: 30px; margin-right: 10px; }
+        .start-btn-wrapper button { padding: 20px 25px; font-size: 1.2rem; white-space: nowrap; box-shadow: 0 4px 15px rgba(35, 134, 54, 0.4); }
 
         .setup-phase .battle-only { display: none; }
         .battle-phase .setup-only { display: none; }
@@ -71,23 +77,28 @@
     <canvas id="missile-canvas"></canvas>
     
     <div class="status-panel">
-        <div id="status-msg" class="setup-only">함대를 배치하십시오 (AIRCRAFT CARRIER부터 시작)</div>
+        <div id="status-msg" class="setup-only">함대를 배치하십시오 (항공모함부터 시작)</div>
         <div class="battle-only" style="display:none; justify-content:space-around; width:100%;">
-            <div>TURN: <span id="turn-text" style="color:#ffcc00">PLAYER</span></div>
-            <div>ENEMY: <span id="enemy-ships-left">5</span>/5</div>
+            <div>턴(TURN): <span id="turn-text" style="color:#ffcc00">PLAYER</span></div>
+            <div>적함 격침: <span id="enemy-ships-left">5</span>/5</div>
         </div>
     </div>
 
     <div class="game-boards">
+        <div class="start-btn-wrapper setup-only">
+            <button class="main-btn" id="start-battle-btn" onclick="startBattle()" disabled>전투 시작<br>(START)</button>
+        </div>
+
         <div class="board-wrapper">
-            <div class="board-title">PLAYER FLEET</div>
+            <div class="board-title">나의 함대 (PLAYER FLEET)</div>
             <div class="grid-container">
                 <div id="player-labels-y" class="labels-y labels"></div>
                 <div id="player-grid" class="grid"></div>
             </div>
         </div>
+        
         <div class="board-wrapper battle-only">
-            <div class="board-title">ENEMY FLEET</div>
+            <div class="board-title">적 함대 (ENEMY FLEET)</div>
             <div class="grid-container">
                 <div id="enemy-labels-y" class="labels-y labels"></div>
                 <div id="enemy-grid" class="grid"></div>
@@ -100,23 +111,22 @@
         <div class="instr">
             1. 목록에서 배를 선택합니다.<br>
             2. 내 그리드 위에서 **키보드 [A], [S] 키**로 회전(가로/세로)시킵니다.<br>
-            3. 원하는 위치에서 클릭하여 배치합니다. (모든 배 배치 후 전투 시작 가능)
+            3. 원하는 위치에서 클릭하여 배치합니다. (모든 배 배치 후 '전투 시작' 버튼 클릭)
         </div>
-        <button class="main-btn" id="start-battle-btn" onclick="startBattle()" disabled>START BATTLE</button>
     </div>
-    <button class="main-btn battle-only" id="reset-btn" onclick="location.reload()" style="display:none; background:#444;">NEW GAME</button>
+    <button class="main-btn battle-only" id="reset-btn" onclick="location.reload()" style="display:none; background:#444; margin-top:20px;">새 게임 시작</button>
 </div>
 
 <script>
     // --- ⚓ 나노 바나나 2 렌더링 엔진 ⚓ ---
-    // 나으리, 외부 링크 없이 이 코드 내부에서 실시간으로 배를 그려냅니다.
     const shipImgs = {};
+    // 함선 이름을 모두 한글로 변경했습니다.
     const shipsData = [
-        { id: 'carrier', name: 'AIRCRAFT CARRIER', size: 5 },
-        { id: 'battleship', name: 'BATTLESHIP', size: 4 },
-        { id: 'destroyer', name: 'FRIGATE', size: 3 },
-        { id: 'submarine', name: 'SUBMARINE', size: 3, isYellow: true }, // 노란색 잠수함 반영
-        { id: 'patrol', name: 'MINESWEEPER', size: 2 }
+        { id: 'carrier', name: '항공모함', size: 5 },
+        { id: 'battleship', name: '전함', size: 4 },
+        { id: 'destroyer', name: '구축함', size: 3 },
+        { id: 'submarine', name: '잠수함', size: 3, isYellow: true }, // 노란색 잠수함 반영
+        { id: 'patrol', name: '순찰함', size: 2 }
     ];
 
     function drawPixelArtShip(ctx, ship, isVert) {
@@ -146,7 +156,6 @@
     window.onresize = resize; resize();
 
     function init() {
-        // 이미지를 캔버스로 그려서 Base64 형태로 저장
         shipsData.forEach(ship => {
             const hC = document.createElement('canvas'); const vC = document.createElement('canvas');
             hC.width = 32 * ship.size; hC.height = 32; vC.width = 32; vC.height = 32 * ship.size;
@@ -255,8 +264,8 @@
     function attack(r, c, e) { if(!playerTurn || gamePhase !== 'battle') return; playerTurn = false; const rect = e.target.getBoundingClientRect(); anim(window.innerWidth*0.1, window.innerHeight*0.9, rect.left+16, rect.top+16, () => { if(enemyData[r][c] === 1) { enemyData[r][c] = 2; checkSunk(enemyShips, r, c, 'enemy'); } else enemyData[r][c] = 3; render(); if(!win()) setTimeout(comp, 600); }); }
     function anim(sx, sy, ex, ey, cb) { let f = 0; function step() { f++; const p = f/25; const x = sx+(ex-sx)*p, y = sy+(ey-sy)*p - (300*Math.sin(Math.PI*p)); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.beginPath(); ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 3; ctx.moveTo(sx, sy); ctx.quadraticCurveTo((sx+ex)/2, sy-400, x, y); ctx.stroke(); if(f<25) requestAnimationFrame(step); else { ctx.clearRect(0,0,canvas.width,canvas.height); cb(); } } step(); }
     function comp() { if(gamePhase !== 'battle') return; let r, c; do { r=Math.floor(Math.random()*10); c=Math.floor(Math.random()*10); } while(playerData[r][c] >= 2); if(playerData[r][c] === 1) { playerData[r][c] = 2; checkSunk(playerShips, r, c, 'player'); } else playerData[r][c] = 3; playerTurn = true; render(); win(); }
-    function checkSunk(ary, r, c, type) { ary.forEach(s => { if(!s || s.sunk) return; if(s.pos.some(p => p.r === r && p.c === c)) { const hits = s.pos.filter(p => (type === 'enemy' ? enemyData : playerData)[p.r][p.c] === 2).length; if(hits === s.size) { s.sunk = true; if(type === 'player') setTimeout(() => alert(`💀 DEFEAT: 내 군함 ${s.name} 격침...`), 100); else setTimeout(() => alert(`🎊 승리! 적 군함 ${s.name} 격침!`), 100); } } }); }
-    function win() { const eS = enemyShips.filter(s => s && s.sunk).length, pS = playerShips.filter(s => s && s.sunk).length; if(eS === 5) { endGame('WINNER: PLAYER'); return true; } if(pS === 5) { endGame('WINNER: COMPUTER'); return true; } return false; }
+    function checkSunk(ary, r, c, type) { ary.forEach(s => { if(!s || s.sunk) return; if(s.pos.some(p => p.r === r && p.c === c)) { const hits = s.pos.filter(p => (type === 'enemy' ? enemyData : playerData)[p.r][p.c] === 2).length; if(hits === s.size) { s.sunk = true; if(type === 'player') setTimeout(() => alert(`💀 패배: 내 군함 ${s.name} 격침...`), 100); else setTimeout(() => alert(`🎊 승리! 적 군함 ${s.name} 격침!`), 100); } } }); }
+    function win() { const eS = enemyShips.filter(s => s && s.sunk).length, pS = playerShips.filter(s => s && s.sunk).length; if(eS === 5) { endGame('승리자: PLAYER (나의 승리!)'); return true; } if(pS === 5) { endGame('승리자: COMPUTER (적군의 승리...)'); return true; } return false; }
     function endGame(m) { gamePhase = 'over'; render(); setTimeout(() => alert(m), 300); document.getElementById('reset-btn').style.display = 'inline-block'; }
     init();
 </script>
